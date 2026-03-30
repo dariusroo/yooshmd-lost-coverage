@@ -1,681 +1,583 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TBWL → Medication Plan Selector</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weight Loss Program Estimator — YooshMD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 24px; max-width: 900px; }
-    h1 { font-size: 20px; margin: 0 0 16px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin: 12px 0; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    label { display: block; font-size: 12px; color: #555; margin-bottom: 6px; }
-    input, select, textarea, button {
-      width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 10px; font-size: 14px;
-      box-sizing: border-box;
+    :root {
+      --teal:       #1d5c52;
+      --teal-light: #2a7a6d;
+      --teal-bg:    #eef5f4;
+      --cream:      #faf7f2;
+      --burgundy:   #5c1f2e;
+      --text:       #2a1f1a;
+      --muted:      #7a6e68;
+      --border:     #e0d8d0;
+      --white:      #ffffff;
+      --gold:       #c4943a;
     }
-    button { cursor: pointer; font-weight: 600; }
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .muted { color: #666; font-size: 13px; }
-    .resultGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #f2f2f2; font-size: 12px; }
-    pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; }
-    .error { color: #b00020; font-weight: 600; }
-    .ok { color: #0a7a2f; font-weight: 700; }
-    details summary { cursor: pointer; font-weight: 600; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; font-size: 13px; }
-    th { color: #444; }
-    .small { font-size: 12px; color: #666; }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 20px 60px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--teal-bg);
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(24px, 5vw, 32px);
+      font-weight: 700;
+      color: var(--burgundy);
+      line-height: 1.25;
+      margin-bottom: 12px;
+    }
+
+    .header p {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+    }
+
+    .unit-toggle {
+      display: flex;
+      background: var(--teal-bg);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 28px;
+      width: fit-content;
+    }
+
+    .unit-toggle button {
+      border: none;
+      background: transparent;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .unit-toggle button.active {
+      background: var(--white);
+      color: var(--teal);
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 14px 44px 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--cream);
+      outline: none;
+      transition: border-color 0.2s;
+      -moz-appearance: textfield;
+    }
+
+    .input-wrapper input::-webkit-outer-spin-button,
+    .input-wrapper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .input-wrapper input:focus {
+      border-color: var(--teal);
+      background: var(--white);
+    }
+
+    .input-wrapper input.error { border-color: #c0392b; }
+
+    .input-unit {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .calc-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--teal);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.01em;
+    }
+
+    .calc-btn:hover { background: var(--teal-light); }
+    .calc-btn:active { transform: scale(0.99); }
+
+    .error-msg {
+      font-size: 13px;
+      color: #c0392b;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .results {
+      display: none;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .results.visible {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .results-header {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--burgundy);
+      margin-bottom: 20px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      background: var(--teal-bg);
+      border-radius: 14px;
+      padding: 18px 16px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--burgundy);
+      line-height: 1.1;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .comparison {
+      background: #fdf6ee;
+      border: 1.5px solid #e8d5b0;
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+
+    .comparison-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .comparison-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+
+    .comparison-row + .comparison-row { border-top: 1px solid #e8d5b0; }
+
+    .comparison-name { color: var(--muted); font-weight: 400; }
+
+    .comparison-cost { font-weight: 600; color: var(--text); }
+    .comparison-cost.highlight { color: var(--teal); }
+
+    .comparison-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    .disclaimer {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      padding: 14px 16px;
+      background: var(--cream);
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .cta-card {
+      background: var(--burgundy);
+      border-radius: 20px;
+      padding: 32px;
+      text-align: center;
+    }
+
+    .cta-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .cta-card p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      width: 100%;
+      padding: 16px;
+      background: var(--white);
+      color: var(--burgundy);
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.01em;
+    }
+
+    .cta-btn:hover { opacity: 0.93; }
+    .cta-btn:active { transform: scale(0.99); }
+
+    .cta-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 12px;
+    }
+
+    .doctor-note {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+      padding: 16px;
+      background: var(--white);
+      border-radius: 14px;
+    }
+
+    .doctor-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--teal-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+
+    .doctor-info { flex: 1; }
+
+    .doctor-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .doctor-title {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    @media (max-width: 420px) {
+      .card { padding: 24px 20px; }
+      .cta-card { padding: 24px 20px; }
+      .stat-grid { grid-template-columns: 1fr; }
+      .input-row { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <h1>TBWL → Medication Plan Selector</h1>
-  <div class="muted">Enter current and goal weight. The tool calculates % total body weight loss (TBWL) and selects a plan from your grid.</div>
 
-  <div class="card">
-    <div class="row">
-      <div>
-        <label for="currentWeight">Current weight</label>
-        <input id="currentWeight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 210" />
-      </div>
-      <div>
-        <label for="goalWeight">Goal weight</label>
-        <input id="goalWeight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 175" />
-      </div>
-    </div>
+<div class="container">
 
-    <div class="row" style="margin-top:12px;">
-      <div>
-        <label for="unit">Unit</label>
-        <select id="unit">
-          <option value="lb">lb</option>
-          <option value="kg">kg</option>
-        </select>
-      </div>
-      <div>
-        <label for="tagSelect">Optional filter (tag)</label>
-        <select id="tagSelect">
-          <option value="">(none)</option>
-          <option value="glp1">glp1</option>
-          <option value="non_glp1">non_glp1</option>
-        </select>
-        <div class="small">Tags let you maintain multiple grids/paths without rewriting logic.</div>
-      </div>
-    </div>
-
-    <div class="actions" style="margin-top:14px;">
-      <button id="calcBtn">Calculate & Select Plan</button>
-      <button id="copyBtn" type="button">Copy “Note Text”</button>
-      <button id="resetBtn" type="button">Reset</button>
-    </div>
-
-    <div id="status" style="margin-top:10px;"></div>
+  <div class="header">
+    <div class="badge">Free Estimator</div>
+    <h1>What will my program actually cost?</h1>
+    <p>Lost your Medi-Cal GLP-1 coverage? Enter your weights below to see your estimated program duration and cash-pay medication cost range.</p>
   </div>
 
   <div class="card">
-    <div class="resultGrid">
-      <div>
-        <div class="muted">TBWL</div>
-        <div style="font-size:22px; font-weight:800;" id="tbwlOut">—</div>
-      </div>
-      <div>
-        <div class="muted">Selected band</div>
-        <div style="font-size:16px; font-weight:700;" id="bandOut">—</div>
-      </div>
+    <div class="unit-toggle">
+      <button class="active" id="lbBtn" onclick="setUnit('lb')">lbs</button>
+      <button id="kgBtn" onclick="setUnit('kg')">kg</button>
     </div>
 
-    <hr style="border:none;border-top:1px solid #eee;margin:14px 0;" />
-
-    <div class="resultGrid">
-      <div>
-        <div class="muted">Medication</div>
-        <div style="font-size:18px; font-weight:800;" id="medOut">—</div>
-        <div style="margin-top:8px;">
-          <span class="pill" id="durationOut">Duration: —</span>
-          <span class="pill" id="doseOut">Dose: —</span>
-          <span class="pill" id="monthlyCostOut">Monthly: —</span>
-          <span class="pill" id="totalCostOut">Total: —</span>
+    <div class="input-row">
+      <div class="input-group">
+        <label for="currentW">Current weight</label>
+        <div class="input-wrapper">
+          <input type="number" id="currentW" inputmode="decimal" placeholder="e.g. 210" />
+          <span class="input-unit" id="unitLabel1">lbs</span>
         </div>
       </div>
-      <div>
-        <div class="muted">Titration / instructions</div>
-        <pre id="titrationOut">—</pre>
+      <div class="input-group">
+        <label for="goalW">Goal weight</label>
+        <div class="input-wrapper">
+          <input type="number" id="goalW" inputmode="decimal" placeholder="e.g. 175" />
+          <span class="input-unit" id="unitLabel2">lbs</span>
+        </div>
       </div>
     </div>
 
-    <div style="margin-top:14px;">
-      <div class="muted">Cost breakdown</div>
-      <div id="costBreakdownOut" class="small">—</div>
+    <button class="calc-btn" onclick="calculate()">Show my estimate →</button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="card">
+      <div class="results-header" id="resultsHeading">Your personalized estimate</div>
+
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-label">Program duration</div>
+          <div class="stat-value" id="durationOut">—</div>
+          <div class="stat-sub" id="durationSub"></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Monthly med cost</div>
+          <div class="stat-value" id="monthlyOut">—</div>
+          <div class="stat-sub">estimated range</div>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-box" style="grid-column: 1 / -1;">
+          <div class="stat-label">Estimated total medication cost</div>
+          <div class="stat-value" id="totalOut">—</div>
+          <div class="stat-sub" id="totalSub"></div>
+        </div>
+      </div>
+
+      <div class="comparison">
+        <div class="comparison-label">How this compares</div>
+        <div class="comparison-row">
+          <span class="comparison-name">Open-ended GLP-1 subscription (no exit plan)</span>
+          <span class="comparison-cost" id="compIndefOut">—</span>
+        </div>
+        <div class="comparison-row">
+          <span class="comparison-name">YooshMD finite program</span>
+          <span class="comparison-cost highlight" id="compYooshOut">—</span>
+        </div>
+        <div class="comparison-note" id="compNote"></div>
+      </div>
+
+      <div class="disclaimer">
+        * Estimates are based on current manufacturer cash-pay pricing and are not guaranteed. Actual medication cost depends on the drug prescribed, dose titration, and any savings programs you may qualify for. Physician membership fees are separate. Individual results vary.
+      </div>
     </div>
 
-    <div style="margin-top:14px;">
-      <div class="muted">Note text (copy/paste)</div>
-      <textarea id="noteOut" rows="5" readonly></textarea>
+    <div class="cta-card">
+      <h2>Get a personalized plan from Dr. Roohani</h2>
+      <p>A free 15-minute discovery call to review your options, discuss savings programs, and see if YooshMD is the right fit — no commitment required.</p>
+      <a class="cta-btn" href="https://drchrono.com/scheduling/offices/dGhpcyBpcyAxNiBjaGFycysPOFfshC0Hi1g202sXmtQ=" target="_blank">Book my free discovery call</a>
+      <div class="cta-sub">No cost · No obligation · 15 minutes</div>
+
+      <div class="doctor-note">
+        <div class="doctor-avatar">👨‍⚕️</div>
+        <div class="doctor-info">
+          <div class="doctor-name">Dr. Darius Roohani, MD</div>
+          <div class="doctor-title">Board-Certified, Internal Medicine & Obesity Medicine · Cedars-Sinai trained</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <details class="card">
-    <summary>Edit the grid (rules table)</summary>
-    <div class="small" style="margin:10px 0 8px;">
-      This is your “grid.” Each row is a TBWL band. The first matching band is selected after filtering by tag (if provided),
-      then by priority (higher wins).
-    </div>
-
-    <table id="gridTable"></table>
-
-    <div style="margin-top:12px;">
-      <label for="gridJson">Grid JSON (advanced)</label>
-      <textarea id="gridJson" rows="10" spellcheck="false"></textarea>
-      <div class="actions" style="margin-top:10px;">
-        <button id="applyGridBtn" type="button">Apply Grid JSON</button>
-        <button id="restoreGridBtn" type="button">Restore Default Grid</button>
-      </div>
-      <div class="small">Tip: keep this JSON in a private repo / internal tool only.</div>
-    </div>
-  </details>
+</div>
 
 <script>
-  // ----- 1) Your grid lives here -----
-  // Replace these example rows with your real medication grid.
-  // Fields:
-  // - min_tbwl: inclusive
-  // - max_tbwl: exclusive
-  // - medication, dose, duration_weeks, titration
-  // - tags: optional array; if user selects a tag, only rows containing that tag are eligible
-  // - priority: higher wins if multiple match
-  let GRID = [
-  // New format: add `drug` + `schedule` (months-based) and keep your human-readable `titration`.
-// Notes:
-// - duration_weeks is kept, but schedule uses months so cost math is clean (1 month = 4 weeks).
-// - I removed trailing commas in tag arrays (they break JSON).
-// - `interval` is included so your price ledger can match it (weekly vs daily, etc.).
+  let unit = 'lb';
 
-  {
-    min_tbwl: 0,
-    max_tbwl: 5,
-    medication: "Lifestyle modifications",
-    drug: null,
-    dose: "—",
-    duration_weeks: 12,
-    titration: "Nutrition + activity plan. Consider medication if clinically appropriate.",
-    schedule: [], // no medication schedule
-    tags: [],
-    priority: 1
-  },
-
-  // -----------------------------
-  // Tirzepatide
-  // -----------------------------
-  {
-    min_tbwl: 5,
-    max_tbwl: 10,
-    medication: "Tirzepatide",
-    drug: "tirzepatide",
-    dose: "Low dose titration",
-    duration_weeks: 12,
-    titration: "Week 1–4: 2.5 mg\nWeek 5+: 5 mg or MTD",
-    schedule: [
-      { months: 1, dose: "2.5 mg", interval: "weekly" },
-      { months: 2, dose: "5 mg", interval: "weekly" },
-    ],
-    tags: ["tirzepatide"],
-    priority: 1
-  },
-  {
-    min_tbwl: 10,
-    max_tbwl: 15,
-    medication: "Tirzepatide",
-    drug: "tirzepatide",
-    dose: "Half dose titration",
-    duration_weeks: 24,
-    titration: "Week 1–4: 2.5 mg\nWeek 5–8: 5 mg\nWeek 9–12: 7.5 mg\nWeek 13+: 10 mg or MTD",
-    schedule: [
-      { months: 1, dose: "2.5 mg", interval: "weekly" },
-      { months: 1, dose: "5 mg", interval: "weekly" },
-      { months: 1, dose: "7.5 mg", interval: "weekly" },
-      { months: 3, dose: "10 mg", interval: "weekly" }
-    ],
-    tags: ["tirzepatide"],
-    priority: 1
-  },
-  {
-    min_tbwl: 15,
-    max_tbwl: 99,
-    medication: "Tirzepatide",
-    drug: "tirzepatide",
-    dose: "Full-dose titration",
-    duration_weeks: 48,
-    titration: "Week 1–4: 2.5 mg\nWeek 5–8: 5 mg\nWeek 9–12: 7.5 mg\nWeek 13-16: 10 mg\nWeek 17-20: 12.5 mg\nWeek 21-24: 15 mg or MTD",
-    schedule: [
-      { months: 1, dose: "2.5 mg", interval: "weekly" },
-      { months: 1, dose: "5 mg", interval: "weekly" },
-      { months: 1, dose: "7.5 mg", interval: "weekly" },
-      { months: 1, dose: "10 mg", interval: "weekly" },
-      { months: 1, dose: "12.5 mg", interval: "weekly" },
-      { months: 1, dose: "15 mg", interval: "weekly" },
-      // remaining 24 weeks (6 months) not specified in your titration text.
-      // choose your default maintenance dose here (example uses 15 mg):
-      { months: 6, dose: "15 mg", interval: "weekly" }
-    ],
-    tags: ["tirzepatide"],
-    priority: 1
-  },
-
-  // -----------------------------
-  // Semaglutide pen
-  // -----------------------------
-  {
-    min_tbwl: 5,
-    max_tbwl: 10,
-    medication: "Semaglutide pen",
-    drug: "semaglutide_pen",
-    dose: "Half-dose",
-    duration_weeks: 12,
-    titration: "Week 1–4: 0.25 mg\nWeek 5–8: 0.5 mg\nWeek 9–12: 1 mg or MTD",
-    schedule: [
-      { months: 1, dose: "0.25 mg", interval: "weekly" },
-      { months: 1, dose: "0.5 mg", interval: "weekly" },
-      { months: 1, dose: "1 mg", interval: "weekly" }
-    ],
-    tags: ["semaglutide pen"],
-    priority: 2
-  },
-  {
-    min_tbwl: 10,
-    max_tbwl: 15,
-    medication: "Semaglutide pen",
-    drug: "semaglutide_pen",
-    dose: "Full-dose",
-    duration_weeks: 24,
-    titration: "Week 1–4: 0.25 mg\nWeek 5–8: 0.5 mg\nWeek 9–12: 1 mg\nWeek 13-16: 2 mg\nWeek 17+: 2.4 mg or MTD",
-    schedule: [
-      { months: 1, dose: "0.25 mg", interval: "weekly" },
-      { months: 1, dose: "0.5 mg", interval: "weekly" },
-      { months: 1, dose: "1 mg", interval: "weekly" },
-      { months: 1, dose: "2 mg", interval: "weekly" },
-      { months: 2, dose: "2.4 mg", interval: "weekly" }
-    ],
-    tags: ["semaglutide pen"],
-    priority: 1
-  },
-  {
-    min_tbwl: 15,
-    max_tbwl: 99,
-    medication: "Semaglutide pen",
-    drug: "semaglutide_pen",
-    dose: "Full-dose, extended",
-    duration_weeks: 48,
-    titration: "Week 1–4: 0.25 mg\nWeek 5–8: 0.5 mg\nWeek 9–12: 1 mg\nWeek 13-16: 2 mg\nWeek 17+: 2.4 mg or MTD",
-    schedule: [
-      { months: 1, dose: "0.25 mg", interval: "weekly" },
-      { months: 1, dose: "0.5 mg", interval: "weekly" },
-      { months: 1, dose: "1 mg", interval: "weekly" },
-      { months: 1, dose: "2 mg", interval: "weekly" },
-      // remaining after week 17 is 32 weeks = 8 months:
-      { months: 8, dose: "2.4 mg", interval: "weekly" }
-    ],
-    tags: ["semaglutide pen"],
-    priority: 1
-  },
-
-  // -----------------------------
-  // Semaglutide tablet (oral) 
-  // -----------------------------
-  {
-    min_tbwl: 5,
-    max_tbwl: 10,
-    medication: "Semaglutide tablet",
-    drug: "semaglutide_tablet",
-    dose: "Full-dose",
-    duration_weeks: 24,
-    titration: "Week 1–4: 1.5 mg\nWeek 5–8: 4 mg\nWeek 9–12: 9 mg\nWeek 13-16: 25 mg or MTD",
-    schedule: [
-      { months: 1, dose: "1.5 mg", interval: "daily" },
-      { months: 1, dose: "4 mg", interval: "daily" },
-      { months: 1, dose: "9 mg", interval: "daily" },
-      { months: 1, dose: "25 mg", interval: "daily" },
-      { months: 2, dose: "25 mg", interval: "daily" } // maintenance for remaining months
-    ],
-    tags: ["oral", "semaglutide tablet"],
-    priority: 1
-  },
-  {
-    min_tbwl: 10,
-    max_tbwl: 15,
-    medication: "Semaglutide tablet",
-    drug: "semaglutide_tablet",
-    dose: "Full-dose, extended",
-    duration_weeks: 48,
-    titration: "Week 1–4: 1.5 mg\nWeek 5–8: 4 mg\nWeek 9–12: 9 mg\nWeek 13-16: 25 mg\nWeek 17+: 2.4 mg or MTD",
-    schedule: [
-      { months: 1, dose: "1.5 mg", interval: "daily" },
-      { months: 1, dose: "4 mg", interval: "daily" },
-      { months: 1, dose: "9 mg", interval: "daily" },
-      { months: 1, dose: "25 mg", interval: "daily" },
-      { months: 8, dose: "25 mg", interval: "daily" } // maintenance to fill 12 months total
-    ],
-    tags: ["semaglutide tablet", "oral"],
-    priority: 1
-  },
-
-  // -----------------------------
-  // Contrave
-  // -----------------------------
-  {
-    min_tbwl: 5,
-    max_tbwl: 10,
-    medication: "Contrave",
-    drug: "contrave",
-    dose: "Full-dose",
-    duration_weeks: 24,
-    titration: "Week 1: 1 tablet qAM\nWeek 2: 1 tablet BID\nWeek 3: 2 tablet qAM, 1 tablet qPM\nWeek 4: 2 tablets BID",
-    schedule: [
-      { months: 6, dose: "2 tabs BID", interval: "daily" } // monthly price usually the same once at maintenance
-    ],
-    tags: ["non_glp1", "oral"],
-    priority: 1
-  },
-  {
-    min_tbwl: 5,
-    max_tbwl: 10,
-    medication: "Contrave, off-label",
-    drug: "bupropion_naltrexone",
-    dose: "Full-dose",
-    duration_weeks: 24,
-    titration: "Week 1: Bupropion 150 mg QD\nWeek 2: Bupropion 150 mg BID\nWeek 3+: Add naltrexone 25 mg daily",
-    schedule: [
-      { months: 6, dose: "bupropion 150 BID + naltrexone 25 QD", interval: "daily" }
-    ],
-    tags: ["non_glp1", "oral"],
-    priority: 1
-  }
-  ]
-
-  // Price Ledger: prices can change over time via effective_date
-  let PRICE_LEDGER = [
-  // Example: same drug, different doses, different monthly prices
-  { drug: "semaglutide_pen", dose: "0.25 mg", interval: "weekly", monthly_price: 199, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "semaglutide_pen", dose: "0.5 mg",  interval: "weekly", monthly_price: 199, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "semaglutide_pen", dose: "1 mg",    interval: "weekly", monthly_price: 349, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "semaglutide_pen", dose: "2 mg",    interval: "weekly", monthly_price: 349, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "semaglutide_pen", dose: "2.4 mg",    interval: "weekly", monthly_price: 349, currency: "USD", effective_date: "2026-02-01" },
-
-  
-  { drug: "semaglutide_tablet", dose: "1.5 mg", interval: "daily", monthly_price: 149, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "semaglutide_tablet", dose: "4 mg",  interval: "daily", monthly_price: 149, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "semaglutide_tablet", dose: "9 mg",    interval: "daily", monthly_price: 299, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "semaglutide_tablet", dose: "25 mg",    interval: "daily", monthly_price: 299, currency: "USD", effective_date: "2026-02-01" },
-
-  { drug: "tirzepatide", dose: "2.5 mg",  interval: "weekly", monthly_price: 299, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "tirzepatide", dose: "5 mg",    interval: "weekly", monthly_price: 399, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "tirzepatide", dose: "7.5 mg",  interval: "weekly", monthly_price: 449, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "tirzepatide", dose: "10 mg",   interval: "weekly", monthly_price: 449, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "tirzepatide", dose: "12.5 mg", interval: "weekly", monthly_price: 449, currency: "USD", effective_date: "2026-02-01" },
-  { drug: "tirzepatide", dose: "15 mg",   interval: "weekly", monthly_price: 449, currency: "USD", effective_date: "2026-02-01" },
-  
-  // If a price changes later, add a new row with a newer effective_date:
-  //{ drug: "semaglutide", dose: "0.5 mg",  interval: "weekly", monthly_price: 529, currency: "USD", effective_date: "2026-03-15" }
-  ];
-
-  // ----- 2) Core logic -----
-  function tbwlPercent(current, goal) {
-    if (!isFinite(current) || !isFinite(goal)) throw new Error("Enter both weights.");
-    if (current <= 0) throw new Error("Current weight must be > 0.");
-    if (goal < 0) throw new Error("Goal weight must be ≥ 0.");
-    if (goal >= current) return 0;
-    return ((current - goal) / current) * 100;
+  function setUnit(u) {
+    unit = u;
+    document.getElementById('unitLabel1').textContent = u === 'lb' ? 'lbs' : 'kg';
+    document.getElementById('unitLabel2').textContent = u === 'lb' ? 'lbs' : 'kg';
+    document.getElementById('lbBtn').classList.toggle('active', u === 'lb');
+    document.getElementById('kgBtn').classList.toggle('active', u === 'kg');
   }
 
-  function selectPlan(tbwl, tag) {
-  const eligible = GRID
-    .filter(r => tbwl >= r.min_tbwl && tbwl < r.max_tbwl)
-    .filter(r => {
-      if (!tag) return true;                 // no filter selected
-      if (!Array.isArray(r.tags)) return false; // no tags => NOT eligible
-      return r.tags.includes(tag);           // must match
-    });
-
-  if (eligible.length === 0) return null;
-
-  eligible.sort((a,b) => (b.priority||0) - (a.priority||0));
-  return eligible[0];
+  function money(n) {
+    return '$' + Math.round(n).toLocaleString();
   }
 
-  function buildNote(current, goal, unit, tbwl, plan) {
-    const tbwlStr = tbwl.toFixed(1) + "%";
-    const bandStr = `${plan.min_tbwl}–${plan.max_tbwl}% TBWL band`;
-    return [
-      `Weights: current ${current} ${unit}, goal ${goal} ${unit}.`,
-      `Calculated TBWL: ${tbwlStr}.`,
-      `Selected plan: ${plan.medication} (${bandStr}).`,
-      `Dose: ${plan.dose}. Duration: ${plan.duration_weeks} weeks.`,
-      `Titration / instructions: ${plan.titration}`
-    ].join(" ");
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('currentW').classList.toggle('error', !document.getElementById('currentW').value);
+    document.getElementById('goalW').classList.toggle('error', !document.getElementById('goalW').value);
   }
 
-  // ----- 3) UI wiring -----
-  const el = (id) => document.getElementById(id);
-
-  function setStatus(msg, kind) {
-    const s = el("status");
-    s.innerHTML = "";
-    const div = document.createElement("div");
-    div.className = kind === "error" ? "error" : "ok";
-    div.textContent = msg;
-    s.appendChild(div);
+  function clearError() {
+    document.getElementById('errorMsg').style.display = 'none';
+    document.getElementById('currentW').classList.remove('error');
+    document.getElementById('goalW').classList.remove('error');
   }
 
-  function renderGridTable() {
-    const table = el("gridTable");
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th>Band (min–max %)</th>
-          <th>Medication</th>
-          <th>Dose</th>
-          <th>Duration (wks)</th>
-          <th>Tags</th>
-          <th>Priority</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${GRID.map(r => `
-          <tr>
-            <td>${r.min_tbwl}–${r.max_tbwl}</td>
-            <td>${escapeHtml(r.medication)}</td>
-            <td>${escapeHtml(r.dose)}</td>
-            <td>${r.duration_weeks}</td>
-            <td>${Array.isArray(r.tags) ? r.tags.join(", ") : ""}</td>
-            <td>${r.priority ?? 0}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    `;
-    el("gridJson").value = JSON.stringify(GRID, null, 2);
-  }
+  function calculate() {
+    clearError();
 
-  function escapeHtml(str) {
-    return String(str).replace(/[&<>"']/g, (m) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
-    }[m]));
-  }
+    const cw = parseFloat(document.getElementById('currentW').value);
+    const gw = parseFloat(document.getElementById('goalW').value);
 
-  function clearOutputs() {
-    el("tbwlOut").textContent = "—";
-    el("bandOut").textContent = "—";
-    el("medOut").textContent = "—";
-    el("durationOut").textContent = "Duration: —";
-    el("doseOut").textContent = "Dose: —";
-    el("titrationOut").textContent = "—";
-    el("noteOut").value = "";
-    el("status").innerHTML = "";
-    el("monthlyCostOut").textContent = "Monthly: —";
-    el("totalCostOut").textContent = "Total: —";
-    el("costBreakdownOut").textContent = "—";
-  }
-
-  function renderTagDropdown() {
-    const select = el("tagSelect");
-    const allTags = new Set();
-
-    GRID.forEach(r => {
-      if (Array.isArray(r.tags)) {
-        r.tags.forEach(t => allTags.add(t));
-      }
-    });
-
-    const currentValue = select.value;
-
-    select.innerHTML = `<option value="">(none)</option>` +
-      [...allTags].sort().map(tag =>
-        `<option value="${tag}">${tag}</option>`
-      ).join("");
-
-    if (allTags.has(currentValue)) {
-      select.value = currentValue;
+    if (!isFinite(cw) || !isFinite(gw)) {
+      showError('Please enter both your current and goal weight.');
+      return;
     }
-  }
-
-  function getPrice(drug, dose, interval, asOfDateStr) {
-    const asOf = new Date(asOfDateStr);
-
-    const matches = PRICE_LEDGER
-      .filter(p =>
-        p.drug === drug &&
-        p.dose === dose &&
-        (p.interval || "") === (interval || "") &&
-        new Date(p.effective_date) <= asOf
-      )
-      .sort((a,b) => new Date(b.effective_date) - new Date(a.effective_date));
-
-    return matches[0] || null; // {monthly_price, currency, ...}
-  }
-
-function estimatePlanCost(plan, asOfDateStr) {
-  if (!plan || !Array.isArray(plan.schedule) || !plan.drug) {
-    return { total: null, monthlyNow: null, breakdown: [], missing: [] };
-  }
-
-  let total = 0;
-  const breakdown = [];
-  const missing = [];
-
-  for (const step of plan.schedule) {
-    const price = getPrice(plan.drug, step.dose, step.interval, asOfDateStr);
-
-    if (!price || typeof price.monthly_price !== "number") {
-      missing.push(step.dose);
-      continue;
+    if (cw <= 0 || gw <= 0) {
+      showError('Please enter a weight greater than zero.');
+      return;
+    }
+    if (gw >= cw) {
+      showError('Goal weight should be less than your current weight.');
+      return;
     }
 
-    const months = Number(step.months);
-    if (!isFinite(months) || months <= 0) {
-      missing.push(`${step.dose} (missing/invalid months)`);
-      continue;
+    const tbwl = ((cw - gw) / cw) * 100;
+
+    let months, monthlyLow, monthlyHigh, bandLabel;
+
+    if (tbwl < 5) {
+      months = 3; monthlyLow = 149; monthlyHigh = 299; bandLabel = 'Modest weight loss goal';
+    } else if (tbwl < 10) {
+      months = 3; monthlyLow = 149; monthlyHigh = 349; bandLabel = '5–10% body weight reduction';
+    } else if (tbwl < 15) {
+      months = 6; monthlyLow = 149; monthlyHigh = 399; bandLabel = '10–15% body weight reduction';
+    } else {
+      months = 12; monthlyLow = 149; monthlyHigh = 449; bandLabel = '15%+ body weight reduction';
     }
 
-    total += price.monthly_price * months;
+    const totalLow    = monthlyLow  * months;
+    const totalHigh   = monthlyHigh * months;
+    const indefMonthly = Math.round((monthlyLow + monthlyHigh) / 2);
+    const indefTotal   = indefMonthly * 24;
 
-    breakdown.push({
-      dose: step.dose,
-      months,
-      monthly_price: price.monthly_price,
-      interval: step.interval
-    });
+    document.getElementById('durationOut').textContent = months + (months === 1 ? ' month' : ' months');
+    document.getElementById('durationSub').textContent = bandLabel;
+    document.getElementById('monthlyOut').textContent = money(monthlyLow) + '–' + money(monthlyHigh);
+    document.getElementById('totalOut').textContent = money(totalLow) + '–' + money(totalHigh);
+    document.getElementById('totalSub').textContent = 'for the full ' + months + '-month program';
+
+    document.getElementById('compIndefOut').textContent = money(indefTotal) + '+ over 2 yrs';
+    document.getElementById('compYooshOut').textContent = money(totalLow) + '–' + money(totalHigh) + ' total';
+    document.getElementById('compNote').textContent =
+      'On an open-ended subscription at ' + money(indefMonthly) + '/month, you could spend ' +
+      money(indefTotal) + ' over 2 years with no defined endpoint. ' +
+      'A YooshMD program is finite — with a medically supervised taper built in from day one.';
+
+    document.getElementById('resultsHeading').textContent =
+      'Your estimate — ' + tbwl.toFixed(1) + '% total body weight loss goal';
+
+    const resultsEl = document.getElementById('results');
+    resultsEl.style.display = 'block';
+    setTimeout(() => resultsEl.classList.add('visible'), 10);
+    resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-
-  // Show maintenance monthly cost (last step)
-  const lastStep = plan.schedule[plan.schedule.length - 1];
-  const lastPrice = getPrice(plan.drug, lastStep.dose, lastStep.interval, asOfDateStr);
-  const monthlyNow = lastPrice?.monthly_price ?? null;
-
-  return { total, monthlyNow, breakdown, missing };
-}
-
-function money(n, currency="USD") {
-  if (n == null || !isFinite(n)) return "—";
-  return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n);
-}
-
-function renderCostBreakdownHtml(result) {
-  if (!result || result.breakdown.length === 0) return "—";
-
-  const rows = result.breakdown.map(r => `
-    <tr>
-      <td>${r.dose}</td>
-      <td>${r.months}</td>
-      <td>${money(r.monthly_price)}/mo</td>
-    </tr>
-  `).join("");
-
-  const missingNote = result.missing.length
-    ? `<div class="error" style="margin-top:8px;">
-         Missing prices / months for: ${result.missing.join(", ")}
-       </div>`
-    : "";
-
-  return `
-    <table>
-      <thead>
-        <tr>
-          <th>Dose</th>
-          <th>Months</th>
-          <th>Monthly Price</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-    ${missingNote}
-  `;
-}
-
-  el("calcBtn").addEventListener("click", () => {
-    try {
-      const current = parseFloat(el("currentWeight").value);
-      const goal = parseFloat(el("goalWeight").value);
-      const unit = el("unit").value;
-      const tag = el("tagSelect").value;
-
-      const tbwl = tbwlPercent(current, goal);
-      const plan = selectPlan(tbwl, tag);
-
-      el("tbwlOut").textContent = tbwl.toFixed(1) + "%";
-
-      if (!plan) {
-        clearOutputs();
-        el("tbwlOut").textContent = tbwl.toFixed(1) + "%";
-        setStatus("No plan matched your grid for this TBWL (and tag filter).", "error");
-        return;
-      }
-
-      const asOfDateStr = new Date().toISOString().slice(0,10); // YYYY-MM-DD
-      const costResult = estimatePlanCost(plan, asOfDateStr);
-      el("monthlyCostOut").textContent = `Monthly: ${money(costResult.monthlyNow)}`;
-      el("totalCostOut").textContent = `Total: ${money(costResult.total)}`;
-      el("costBreakdownOut").innerHTML = renderCostBreakdownHtml(costResult);
-
-      el("bandOut").textContent = `${plan.min_tbwl}–${plan.max_tbwl}%`;
-      el("medOut").textContent = plan.medication;
-      el("durationOut").textContent = `Duration: ${plan.duration_weeks} weeks`;
-      el("doseOut").textContent = `Dose: ${plan.dose}`;
-      el("titrationOut").textContent = plan.titration;
-
-      el("noteOut").value = buildNote(current, goal, unit, tbwl, plan);
-      setStatus("Plan selected.", "ok");
-    } catch (e) {
-      setStatus(e.message || "Error", "error");
-    }
-  });
-
-  el("copyBtn").addEventListener("click", async () => {
-    const text = el("noteOut").value.trim();
-    if (!text) { setStatus("Nothing to copy yet.", "error"); return; }
-    await navigator.clipboard.writeText(text);
-    setStatus("Copied note text to clipboard.", "ok");
-  });
-
-  el("resetBtn").addEventListener("click", () => {
-    el("currentWeight").value = "";
-    el("goalWeight").value = "";
-    el("tagSelect").value = "";
-    clearOutputs();
-  });
-
-  const DEFAULT_GRID = JSON.parse(JSON.stringify(GRID));
-
-  el("applyGridBtn").addEventListener("click", () => {
-    try {
-      const parsed = JSON.parse(el("gridJson").value);
-      if (!Array.isArray(parsed)) throw new Error("Grid JSON must be an array of rows.");
-      // Basic validation
-      parsed.forEach((r, i) => {
-        ["min_tbwl","max_tbwl","medication","dose","duration_weeks","titration"].forEach(k => {
-          if (r[k] === undefined) throw new Error(`Row ${i} missing "${k}".`);
-        });
-        if (!(Number(r.min_tbwl) < Number(r.max_tbwl))) throw new Error(`Row ${i} must have min_tbwl < max_tbwl.`);
-      });
-      GRID = parsed;
-      renderGridTable();
-      renderTagDropdown();
-      setStatus("Grid applied.", "ok");
-    } catch (e) {
-      setStatus(e.message || "Invalid JSON.", "error");
-    }
-  });
-
-  el("restoreGridBtn").addEventListener("click", () => {
-    GRID = JSON.parse(JSON.stringify(DEFAULT_GRID));
-    renderGridTable();
-    renderTagDropdown();
-    setStatus("Default grid restored.", "ok");
-  });
-
-  renderGridTable();
-  renderTagDropdown();
-  clearOutputs();
 </script>
 </body>
 </html>
