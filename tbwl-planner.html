@@ -1,0 +1,681 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TBWL → Medication Plan Selector</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 24px; max-width: 900px; }
+    h1 { font-size: 20px; margin: 0 0 16px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin: 12px 0; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { display: block; font-size: 12px; color: #555; margin-bottom: 6px; }
+    input, select, textarea, button {
+      width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 10px; font-size: 14px;
+      box-sizing: border-box;
+    }
+    button { cursor: pointer; font-weight: 600; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .muted { color: #666; font-size: 13px; }
+    .resultGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #f2f2f2; font-size: 12px; }
+    pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; }
+    .error { color: #b00020; font-weight: 600; }
+    .ok { color: #0a7a2f; font-weight: 700; }
+    details summary { cursor: pointer; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; font-size: 13px; }
+    th { color: #444; }
+    .small { font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>TBWL → Medication Plan Selector</h1>
+  <div class="muted">Enter current and goal weight. The tool calculates % total body weight loss (TBWL) and selects a plan from your grid.</div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="currentWeight">Current weight</label>
+        <input id="currentWeight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 210" />
+      </div>
+      <div>
+        <label for="goalWeight">Goal weight</label>
+        <input id="goalWeight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 175" />
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:12px;">
+      <div>
+        <label for="unit">Unit</label>
+        <select id="unit">
+          <option value="lb">lb</option>
+          <option value="kg">kg</option>
+        </select>
+      </div>
+      <div>
+        <label for="tagSelect">Optional filter (tag)</label>
+        <select id="tagSelect">
+          <option value="">(none)</option>
+          <option value="glp1">glp1</option>
+          <option value="non_glp1">non_glp1</option>
+        </select>
+        <div class="small">Tags let you maintain multiple grids/paths without rewriting logic.</div>
+      </div>
+    </div>
+
+    <div class="actions" style="margin-top:14px;">
+      <button id="calcBtn">Calculate & Select Plan</button>
+      <button id="copyBtn" type="button">Copy “Note Text”</button>
+      <button id="resetBtn" type="button">Reset</button>
+    </div>
+
+    <div id="status" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
+    <div class="resultGrid">
+      <div>
+        <div class="muted">TBWL</div>
+        <div style="font-size:22px; font-weight:800;" id="tbwlOut">—</div>
+      </div>
+      <div>
+        <div class="muted">Selected band</div>
+        <div style="font-size:16px; font-weight:700;" id="bandOut">—</div>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid #eee;margin:14px 0;" />
+
+    <div class="resultGrid">
+      <div>
+        <div class="muted">Medication</div>
+        <div style="font-size:18px; font-weight:800;" id="medOut">—</div>
+        <div style="margin-top:8px;">
+          <span class="pill" id="durationOut">Duration: —</span>
+          <span class="pill" id="doseOut">Dose: —</span>
+          <span class="pill" id="monthlyCostOut">Monthly: —</span>
+          <span class="pill" id="totalCostOut">Total: —</span>
+        </div>
+      </div>
+      <div>
+        <div class="muted">Titration / instructions</div>
+        <pre id="titrationOut">—</pre>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <div class="muted">Cost breakdown</div>
+      <div id="costBreakdownOut" class="small">—</div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <div class="muted">Note text (copy/paste)</div>
+      <textarea id="noteOut" rows="5" readonly></textarea>
+    </div>
+  </div>
+
+  <details class="card">
+    <summary>Edit the grid (rules table)</summary>
+    <div class="small" style="margin:10px 0 8px;">
+      This is your “grid.” Each row is a TBWL band. The first matching band is selected after filtering by tag (if provided),
+      then by priority (higher wins).
+    </div>
+
+    <table id="gridTable"></table>
+
+    <div style="margin-top:12px;">
+      <label for="gridJson">Grid JSON (advanced)</label>
+      <textarea id="gridJson" rows="10" spellcheck="false"></textarea>
+      <div class="actions" style="margin-top:10px;">
+        <button id="applyGridBtn" type="button">Apply Grid JSON</button>
+        <button id="restoreGridBtn" type="button">Restore Default Grid</button>
+      </div>
+      <div class="small">Tip: keep this JSON in a private repo / internal tool only.</div>
+    </div>
+  </details>
+
+<script>
+  // ----- 1) Your grid lives here -----
+  // Replace these example rows with your real medication grid.
+  // Fields:
+  // - min_tbwl: inclusive
+  // - max_tbwl: exclusive
+  // - medication, dose, duration_weeks, titration
+  // - tags: optional array; if user selects a tag, only rows containing that tag are eligible
+  // - priority: higher wins if multiple match
+  let GRID = [
+  // New format: add `drug` + `schedule` (months-based) and keep your human-readable `titration`.
+// Notes:
+// - duration_weeks is kept, but schedule uses months so cost math is clean (1 month = 4 weeks).
+// - I removed trailing commas in tag arrays (they break JSON).
+// - `interval` is included so your price ledger can match it (weekly vs daily, etc.).
+
+  {
+    min_tbwl: 0,
+    max_tbwl: 5,
+    medication: "Lifestyle modifications",
+    drug: null,
+    dose: "—",
+    duration_weeks: 12,
+    titration: "Nutrition + activity plan. Consider medication if clinically appropriate.",
+    schedule: [], // no medication schedule
+    tags: [],
+    priority: 1
+  },
+
+  // -----------------------------
+  // Tirzepatide
+  // -----------------------------
+  {
+    min_tbwl: 5,
+    max_tbwl: 10,
+    medication: "Tirzepatide",
+    drug: "tirzepatide",
+    dose: "Low dose titration",
+    duration_weeks: 12,
+    titration: "Week 1–4: 2.5 mg\nWeek 5+: 5 mg or MTD",
+    schedule: [
+      { months: 1, dose: "2.5 mg", interval: "weekly" },
+      { months: 2, dose: "5 mg", interval: "weekly" },
+    ],
+    tags: ["tirzepatide"],
+    priority: 1
+  },
+  {
+    min_tbwl: 10,
+    max_tbwl: 15,
+    medication: "Tirzepatide",
+    drug: "tirzepatide",
+    dose: "Half dose titration",
+    duration_weeks: 24,
+    titration: "Week 1–4: 2.5 mg\nWeek 5–8: 5 mg\nWeek 9–12: 7.5 mg\nWeek 13+: 10 mg or MTD",
+    schedule: [
+      { months: 1, dose: "2.5 mg", interval: "weekly" },
+      { months: 1, dose: "5 mg", interval: "weekly" },
+      { months: 1, dose: "7.5 mg", interval: "weekly" },
+      { months: 3, dose: "10 mg", interval: "weekly" }
+    ],
+    tags: ["tirzepatide"],
+    priority: 1
+  },
+  {
+    min_tbwl: 15,
+    max_tbwl: 99,
+    medication: "Tirzepatide",
+    drug: "tirzepatide",
+    dose: "Full-dose titration",
+    duration_weeks: 48,
+    titration: "Week 1–4: 2.5 mg\nWeek 5–8: 5 mg\nWeek 9–12: 7.5 mg\nWeek 13-16: 10 mg\nWeek 17-20: 12.5 mg\nWeek 21-24: 15 mg or MTD",
+    schedule: [
+      { months: 1, dose: "2.5 mg", interval: "weekly" },
+      { months: 1, dose: "5 mg", interval: "weekly" },
+      { months: 1, dose: "7.5 mg", interval: "weekly" },
+      { months: 1, dose: "10 mg", interval: "weekly" },
+      { months: 1, dose: "12.5 mg", interval: "weekly" },
+      { months: 1, dose: "15 mg", interval: "weekly" },
+      // remaining 24 weeks (6 months) not specified in your titration text.
+      // choose your default maintenance dose here (example uses 15 mg):
+      { months: 6, dose: "15 mg", interval: "weekly" }
+    ],
+    tags: ["tirzepatide"],
+    priority: 1
+  },
+
+  // -----------------------------
+  // Semaglutide pen
+  // -----------------------------
+  {
+    min_tbwl: 5,
+    max_tbwl: 10,
+    medication: "Semaglutide pen",
+    drug: "semaglutide_pen",
+    dose: "Half-dose",
+    duration_weeks: 12,
+    titration: "Week 1–4: 0.25 mg\nWeek 5–8: 0.5 mg\nWeek 9–12: 1 mg or MTD",
+    schedule: [
+      { months: 1, dose: "0.25 mg", interval: "weekly" },
+      { months: 1, dose: "0.5 mg", interval: "weekly" },
+      { months: 1, dose: "1 mg", interval: "weekly" }
+    ],
+    tags: ["semaglutide pen"],
+    priority: 2
+  },
+  {
+    min_tbwl: 10,
+    max_tbwl: 15,
+    medication: "Semaglutide pen",
+    drug: "semaglutide_pen",
+    dose: "Full-dose",
+    duration_weeks: 24,
+    titration: "Week 1–4: 0.25 mg\nWeek 5–8: 0.5 mg\nWeek 9–12: 1 mg\nWeek 13-16: 2 mg\nWeek 17+: 2.4 mg or MTD",
+    schedule: [
+      { months: 1, dose: "0.25 mg", interval: "weekly" },
+      { months: 1, dose: "0.5 mg", interval: "weekly" },
+      { months: 1, dose: "1 mg", interval: "weekly" },
+      { months: 1, dose: "2 mg", interval: "weekly" },
+      { months: 2, dose: "2.4 mg", interval: "weekly" }
+    ],
+    tags: ["semaglutide pen"],
+    priority: 1
+  },
+  {
+    min_tbwl: 15,
+    max_tbwl: 99,
+    medication: "Semaglutide pen",
+    drug: "semaglutide_pen",
+    dose: "Full-dose, extended",
+    duration_weeks: 48,
+    titration: "Week 1–4: 0.25 mg\nWeek 5–8: 0.5 mg\nWeek 9–12: 1 mg\nWeek 13-16: 2 mg\nWeek 17+: 2.4 mg or MTD",
+    schedule: [
+      { months: 1, dose: "0.25 mg", interval: "weekly" },
+      { months: 1, dose: "0.5 mg", interval: "weekly" },
+      { months: 1, dose: "1 mg", interval: "weekly" },
+      { months: 1, dose: "2 mg", interval: "weekly" },
+      // remaining after week 17 is 32 weeks = 8 months:
+      { months: 8, dose: "2.4 mg", interval: "weekly" }
+    ],
+    tags: ["semaglutide pen"],
+    priority: 1
+  },
+
+  // -----------------------------
+  // Semaglutide tablet (oral) 
+  // -----------------------------
+  {
+    min_tbwl: 5,
+    max_tbwl: 10,
+    medication: "Semaglutide tablet",
+    drug: "semaglutide_tablet",
+    dose: "Full-dose",
+    duration_weeks: 24,
+    titration: "Week 1–4: 1.5 mg\nWeek 5–8: 4 mg\nWeek 9–12: 9 mg\nWeek 13-16: 25 mg or MTD",
+    schedule: [
+      { months: 1, dose: "1.5 mg", interval: "daily" },
+      { months: 1, dose: "4 mg", interval: "daily" },
+      { months: 1, dose: "9 mg", interval: "daily" },
+      { months: 1, dose: "25 mg", interval: "daily" },
+      { months: 2, dose: "25 mg", interval: "daily" } // maintenance for remaining months
+    ],
+    tags: ["oral", "semaglutide tablet"],
+    priority: 1
+  },
+  {
+    min_tbwl: 10,
+    max_tbwl: 15,
+    medication: "Semaglutide tablet",
+    drug: "semaglutide_tablet",
+    dose: "Full-dose, extended",
+    duration_weeks: 48,
+    titration: "Week 1–4: 1.5 mg\nWeek 5–8: 4 mg\nWeek 9–12: 9 mg\nWeek 13-16: 25 mg\nWeek 17+: 2.4 mg or MTD",
+    schedule: [
+      { months: 1, dose: "1.5 mg", interval: "daily" },
+      { months: 1, dose: "4 mg", interval: "daily" },
+      { months: 1, dose: "9 mg", interval: "daily" },
+      { months: 1, dose: "25 mg", interval: "daily" },
+      { months: 8, dose: "25 mg", interval: "daily" } // maintenance to fill 12 months total
+    ],
+    tags: ["semaglutide tablet", "oral"],
+    priority: 1
+  },
+
+  // -----------------------------
+  // Contrave
+  // -----------------------------
+  {
+    min_tbwl: 5,
+    max_tbwl: 10,
+    medication: "Contrave",
+    drug: "contrave",
+    dose: "Full-dose",
+    duration_weeks: 24,
+    titration: "Week 1: 1 tablet qAM\nWeek 2: 1 tablet BID\nWeek 3: 2 tablet qAM, 1 tablet qPM\nWeek 4: 2 tablets BID",
+    schedule: [
+      { months: 6, dose: "2 tabs BID", interval: "daily" } // monthly price usually the same once at maintenance
+    ],
+    tags: ["non_glp1", "oral"],
+    priority: 1
+  },
+  {
+    min_tbwl: 5,
+    max_tbwl: 10,
+    medication: "Contrave, off-label",
+    drug: "bupropion_naltrexone",
+    dose: "Full-dose",
+    duration_weeks: 24,
+    titration: "Week 1: Bupropion 150 mg QD\nWeek 2: Bupropion 150 mg BID\nWeek 3+: Add naltrexone 25 mg daily",
+    schedule: [
+      { months: 6, dose: "bupropion 150 BID + naltrexone 25 QD", interval: "daily" }
+    ],
+    tags: ["non_glp1", "oral"],
+    priority: 1
+  }
+  ]
+
+  // Price Ledger: prices can change over time via effective_date
+  let PRICE_LEDGER = [
+  // Example: same drug, different doses, different monthly prices
+  { drug: "semaglutide_pen", dose: "0.25 mg", interval: "weekly", monthly_price: 199, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "semaglutide_pen", dose: "0.5 mg",  interval: "weekly", monthly_price: 199, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "semaglutide_pen", dose: "1 mg",    interval: "weekly", monthly_price: 349, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "semaglutide_pen", dose: "2 mg",    interval: "weekly", monthly_price: 349, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "semaglutide_pen", dose: "2.4 mg",    interval: "weekly", monthly_price: 349, currency: "USD", effective_date: "2026-02-01" },
+
+  
+  { drug: "semaglutide_tablet", dose: "1.5 mg", interval: "daily", monthly_price: 149, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "semaglutide_tablet", dose: "4 mg",  interval: "daily", monthly_price: 149, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "semaglutide_tablet", dose: "9 mg",    interval: "daily", monthly_price: 299, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "semaglutide_tablet", dose: "25 mg",    interval: "daily", monthly_price: 299, currency: "USD", effective_date: "2026-02-01" },
+
+  { drug: "tirzepatide", dose: "2.5 mg",  interval: "weekly", monthly_price: 299, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "tirzepatide", dose: "5 mg",    interval: "weekly", monthly_price: 399, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "tirzepatide", dose: "7.5 mg",  interval: "weekly", monthly_price: 449, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "tirzepatide", dose: "10 mg",   interval: "weekly", monthly_price: 449, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "tirzepatide", dose: "12.5 mg", interval: "weekly", monthly_price: 449, currency: "USD", effective_date: "2026-02-01" },
+  { drug: "tirzepatide", dose: "15 mg",   interval: "weekly", monthly_price: 449, currency: "USD", effective_date: "2026-02-01" },
+  
+  // If a price changes later, add a new row with a newer effective_date:
+  //{ drug: "semaglutide", dose: "0.5 mg",  interval: "weekly", monthly_price: 529, currency: "USD", effective_date: "2026-03-15" }
+  ];
+
+  // ----- 2) Core logic -----
+  function tbwlPercent(current, goal) {
+    if (!isFinite(current) || !isFinite(goal)) throw new Error("Enter both weights.");
+    if (current <= 0) throw new Error("Current weight must be > 0.");
+    if (goal < 0) throw new Error("Goal weight must be ≥ 0.");
+    if (goal >= current) return 0;
+    return ((current - goal) / current) * 100;
+  }
+
+  function selectPlan(tbwl, tag) {
+  const eligible = GRID
+    .filter(r => tbwl >= r.min_tbwl && tbwl < r.max_tbwl)
+    .filter(r => {
+      if (!tag) return true;                 // no filter selected
+      if (!Array.isArray(r.tags)) return false; // no tags => NOT eligible
+      return r.tags.includes(tag);           // must match
+    });
+
+  if (eligible.length === 0) return null;
+
+  eligible.sort((a,b) => (b.priority||0) - (a.priority||0));
+  return eligible[0];
+  }
+
+  function buildNote(current, goal, unit, tbwl, plan) {
+    const tbwlStr = tbwl.toFixed(1) + "%";
+    const bandStr = `${plan.min_tbwl}–${plan.max_tbwl}% TBWL band`;
+    return [
+      `Weights: current ${current} ${unit}, goal ${goal} ${unit}.`,
+      `Calculated TBWL: ${tbwlStr}.`,
+      `Selected plan: ${plan.medication} (${bandStr}).`,
+      `Dose: ${plan.dose}. Duration: ${plan.duration_weeks} weeks.`,
+      `Titration / instructions: ${plan.titration}`
+    ].join(" ");
+  }
+
+  // ----- 3) UI wiring -----
+  const el = (id) => document.getElementById(id);
+
+  function setStatus(msg, kind) {
+    const s = el("status");
+    s.innerHTML = "";
+    const div = document.createElement("div");
+    div.className = kind === "error" ? "error" : "ok";
+    div.textContent = msg;
+    s.appendChild(div);
+  }
+
+  function renderGridTable() {
+    const table = el("gridTable");
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>Band (min–max %)</th>
+          <th>Medication</th>
+          <th>Dose</th>
+          <th>Duration (wks)</th>
+          <th>Tags</th>
+          <th>Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${GRID.map(r => `
+          <tr>
+            <td>${r.min_tbwl}–${r.max_tbwl}</td>
+            <td>${escapeHtml(r.medication)}</td>
+            <td>${escapeHtml(r.dose)}</td>
+            <td>${r.duration_weeks}</td>
+            <td>${Array.isArray(r.tags) ? r.tags.join(", ") : ""}</td>
+            <td>${r.priority ?? 0}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    `;
+    el("gridJson").value = JSON.stringify(GRID, null, 2);
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (m) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function clearOutputs() {
+    el("tbwlOut").textContent = "—";
+    el("bandOut").textContent = "—";
+    el("medOut").textContent = "—";
+    el("durationOut").textContent = "Duration: —";
+    el("doseOut").textContent = "Dose: —";
+    el("titrationOut").textContent = "—";
+    el("noteOut").value = "";
+    el("status").innerHTML = "";
+    el("monthlyCostOut").textContent = "Monthly: —";
+    el("totalCostOut").textContent = "Total: —";
+    el("costBreakdownOut").textContent = "—";
+  }
+
+  function renderTagDropdown() {
+    const select = el("tagSelect");
+    const allTags = new Set();
+
+    GRID.forEach(r => {
+      if (Array.isArray(r.tags)) {
+        r.tags.forEach(t => allTags.add(t));
+      }
+    });
+
+    const currentValue = select.value;
+
+    select.innerHTML = `<option value="">(none)</option>` +
+      [...allTags].sort().map(tag =>
+        `<option value="${tag}">${tag}</option>`
+      ).join("");
+
+    if (allTags.has(currentValue)) {
+      select.value = currentValue;
+    }
+  }
+
+  function getPrice(drug, dose, interval, asOfDateStr) {
+    const asOf = new Date(asOfDateStr);
+
+    const matches = PRICE_LEDGER
+      .filter(p =>
+        p.drug === drug &&
+        p.dose === dose &&
+        (p.interval || "") === (interval || "") &&
+        new Date(p.effective_date) <= asOf
+      )
+      .sort((a,b) => new Date(b.effective_date) - new Date(a.effective_date));
+
+    return matches[0] || null; // {monthly_price, currency, ...}
+  }
+
+function estimatePlanCost(plan, asOfDateStr) {
+  if (!plan || !Array.isArray(plan.schedule) || !plan.drug) {
+    return { total: null, monthlyNow: null, breakdown: [], missing: [] };
+  }
+
+  let total = 0;
+  const breakdown = [];
+  const missing = [];
+
+  for (const step of plan.schedule) {
+    const price = getPrice(plan.drug, step.dose, step.interval, asOfDateStr);
+
+    if (!price || typeof price.monthly_price !== "number") {
+      missing.push(step.dose);
+      continue;
+    }
+
+    const months = Number(step.months);
+    if (!isFinite(months) || months <= 0) {
+      missing.push(`${step.dose} (missing/invalid months)`);
+      continue;
+    }
+
+    total += price.monthly_price * months;
+
+    breakdown.push({
+      dose: step.dose,
+      months,
+      monthly_price: price.monthly_price,
+      interval: step.interval
+    });
+  }
+
+  // Show maintenance monthly cost (last step)
+  const lastStep = plan.schedule[plan.schedule.length - 1];
+  const lastPrice = getPrice(plan.drug, lastStep.dose, lastStep.interval, asOfDateStr);
+  const monthlyNow = lastPrice?.monthly_price ?? null;
+
+  return { total, monthlyNow, breakdown, missing };
+}
+
+function money(n, currency="USD") {
+  if (n == null || !isFinite(n)) return "—";
+  return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n);
+}
+
+function renderCostBreakdownHtml(result) {
+  if (!result || result.breakdown.length === 0) return "—";
+
+  const rows = result.breakdown.map(r => `
+    <tr>
+      <td>${r.dose}</td>
+      <td>${r.months}</td>
+      <td>${money(r.monthly_price)}/mo</td>
+    </tr>
+  `).join("");
+
+  const missingNote = result.missing.length
+    ? `<div class="error" style="margin-top:8px;">
+         Missing prices / months for: ${result.missing.join(", ")}
+       </div>`
+    : "";
+
+  return `
+    <table>
+      <thead>
+        <tr>
+          <th>Dose</th>
+          <th>Months</th>
+          <th>Monthly Price</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${missingNote}
+  `;
+}
+
+  el("calcBtn").addEventListener("click", () => {
+    try {
+      const current = parseFloat(el("currentWeight").value);
+      const goal = parseFloat(el("goalWeight").value);
+      const unit = el("unit").value;
+      const tag = el("tagSelect").value;
+
+      const tbwl = tbwlPercent(current, goal);
+      const plan = selectPlan(tbwl, tag);
+
+      el("tbwlOut").textContent = tbwl.toFixed(1) + "%";
+
+      if (!plan) {
+        clearOutputs();
+        el("tbwlOut").textContent = tbwl.toFixed(1) + "%";
+        setStatus("No plan matched your grid for this TBWL (and tag filter).", "error");
+        return;
+      }
+
+      const asOfDateStr = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+      const costResult = estimatePlanCost(plan, asOfDateStr);
+      el("monthlyCostOut").textContent = `Monthly: ${money(costResult.monthlyNow)}`;
+      el("totalCostOut").textContent = `Total: ${money(costResult.total)}`;
+      el("costBreakdownOut").innerHTML = renderCostBreakdownHtml(costResult);
+
+      el("bandOut").textContent = `${plan.min_tbwl}–${plan.max_tbwl}%`;
+      el("medOut").textContent = plan.medication;
+      el("durationOut").textContent = `Duration: ${plan.duration_weeks} weeks`;
+      el("doseOut").textContent = `Dose: ${plan.dose}`;
+      el("titrationOut").textContent = plan.titration;
+
+      el("noteOut").value = buildNote(current, goal, unit, tbwl, plan);
+      setStatus("Plan selected.", "ok");
+    } catch (e) {
+      setStatus(e.message || "Error", "error");
+    }
+  });
+
+  el("copyBtn").addEventListener("click", async () => {
+    const text = el("noteOut").value.trim();
+    if (!text) { setStatus("Nothing to copy yet.", "error"); return; }
+    await navigator.clipboard.writeText(text);
+    setStatus("Copied note text to clipboard.", "ok");
+  });
+
+  el("resetBtn").addEventListener("click", () => {
+    el("currentWeight").value = "";
+    el("goalWeight").value = "";
+    el("tagSelect").value = "";
+    clearOutputs();
+  });
+
+  const DEFAULT_GRID = JSON.parse(JSON.stringify(GRID));
+
+  el("applyGridBtn").addEventListener("click", () => {
+    try {
+      const parsed = JSON.parse(el("gridJson").value);
+      if (!Array.isArray(parsed)) throw new Error("Grid JSON must be an array of rows.");
+      // Basic validation
+      parsed.forEach((r, i) => {
+        ["min_tbwl","max_tbwl","medication","dose","duration_weeks","titration"].forEach(k => {
+          if (r[k] === undefined) throw new Error(`Row ${i} missing "${k}".`);
+        });
+        if (!(Number(r.min_tbwl) < Number(r.max_tbwl))) throw new Error(`Row ${i} must have min_tbwl < max_tbwl.`);
+      });
+      GRID = parsed;
+      renderGridTable();
+      renderTagDropdown();
+      setStatus("Grid applied.", "ok");
+    } catch (e) {
+      setStatus(e.message || "Invalid JSON.", "error");
+    }
+  });
+
+  el("restoreGridBtn").addEventListener("click", () => {
+    GRID = JSON.parse(JSON.stringify(DEFAULT_GRID));
+    renderGridTable();
+    renderTagDropdown();
+    setStatus("Default grid restored.", "ok");
+  });
+
+  renderGridTable();
+  renderTagDropdown();
+  clearOutputs();
+</script>
+</body>
+</html>
