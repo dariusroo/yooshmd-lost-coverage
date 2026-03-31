@@ -70,7 +70,7 @@
     /* ─── HERO ─── */
     .hero {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       min-height: 88vh;
       max-width: 1200px;
       margin: 0 auto;
@@ -78,6 +78,7 @@
       gap: 60px;
       align-items: center;
     }
+    .hero-text { max-width: 700px; }
     .hero-eyebrow {
       display: inline-flex;
       align-items: center;
@@ -628,12 +629,11 @@
     </div>
   </div>
 
+  <!-- SECTION HIDDEN: To restore hero doctor card, remove these comment tags
   <div class="hero-card">
     <div class="hero-card-photo">
-      <!--
-        TODO: Replace with real headshot URL.
-        Example: <img src="https://your-cdn.com/dr-roohani.jpg" alt="Dr. Darius Roohani, MD" />
-      -->
+      TODO: Replace with real headshot URL.
+      Example: <img src="https://your-cdn.com/dr-roohani.jpg" alt="Dr. Darius Roohani, MD" />
       <div class="photo-placeholder">
         <span>👨‍⚕️</span>
         <span>Replace with headshot</span>
@@ -649,6 +649,8 @@
       </div>
     </div>
   </div>
+  Also restore grid-template-columns to: 1fr 1fr in the .hero CSS rule above
+  -->
 </div>
 
 <!-- PROBLEM BANNER -->
