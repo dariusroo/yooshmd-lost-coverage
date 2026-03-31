@@ -68,6 +68,7 @@
     .nav-cta:hover { background: var(--teal-mid); }
 
     /* ─── HERO ─── */
+    .hero-text { max-width: 700px; }
     .hero {
       display: grid;
       grid-template-columns: 1fr;
@@ -78,7 +79,6 @@
       gap: 60px;
       align-items: center;
     }
-    .hero-text { max-width: 700px; }
     .hero-eyebrow {
       display: inline-flex;
       align-items: center;
@@ -598,19 +598,19 @@
 <!-- NAV -->
 <nav>
   <a class="nav-logo" href="https://yooshmd.com">YooshMD</a>
-  <a class="nav-cta" href="https://drchrono.com/scheduling/offices/dGhpcyBpcyAxNiBjaGFyc3GZdq07I8UbdCedknIZWQQ=">Book Free Call</a>
+  <a class="nav-cta" href="https://drchrono.com/scheduling/offices/dGhpcyBpcyAxNiBjaGFycysPOFfshC0Hi1g202sXmtQ=">Book Free Call</a>
 </nav>
 
 <!-- HERO -->
 <div class="hero">
   <div class="hero-text">
     <div class="hero-eyebrow">Lost GLP-1 Coverage?</div>
-    <h1>Lost your GLP-1 coverage?<br><em>You still have options.</em></h1>
+    <h1>Lost your GLP-1 coverage?<br><em>There's a smarter path.</em></h1>
     <p class="hero-sub">
-      Not everyone needs the same medication or approach. Book a free call and Dr. Roohani will help you figure out what actually makes sense for your health history, your budget, and your goals.
+      Your GLP-1 coverage had an end date. What it didn't give you was an exit strategy. That's what we built YooshMD around.
     </p>
     <div class="hero-actions">
-      <a href="https://drchrono.com/scheduling/offices/dGhpcyBpcyAxNiBjaGFyc3GZdq07I8UbdCedknIZWQQ=" class="btn-primary">Book a Free 15-Min Call</a>
+      <a href="https://drchrono.com/scheduling/offices/dGhpcyBpcyAxNiBjaGFycysPOFfshC0Hi1g202sXmtQ=" class="btn-primary">Book a Free 15-Min Call</a>
       <a href="#calculator" class="btn-secondary">See what it costs →</a>
     </div>
     <div class="hero-trust">
@@ -630,10 +630,9 @@
   </div>
 
   <!-- SECTION HIDDEN: To restore hero doctor card, remove these comment tags
+  Also restore grid-template-columns to: 1fr 1fr in the .hero CSS rule above
   <div class="hero-card">
     <div class="hero-card-photo">
-      TODO: Replace with real headshot URL.
-      Example: <img src="https://your-cdn.com/dr-roohani.jpg" alt="Dr. Darius Roohani, MD" />
       <div class="photo-placeholder">
         <span>👨‍⚕️</span>
         <span>Replace with headshot</span>
@@ -641,7 +640,7 @@
     </div>
     <div class="hero-card-info">
       <h3>Dr. Darius Roohani, MD</h3>
-      <p>Founder &amp; Medical Director, YooshMD</p>
+      <p>Founder &amp; Medical Director, YooshMD<br>Physician, Kaiser Permanente</p>
       <div class="hero-card-creds">
         <span class="cred-pill">✓ Internal Medicine</span>
         <span class="cred-pill">✓ Obesity Medicine (ABOM)</span>
@@ -649,7 +648,6 @@
       </div>
     </div>
   </div>
-  Also restore grid-template-columns to: 1fr 1fr in the .hero CSS rule above
   -->
 </div>
 
@@ -657,13 +655,12 @@
 <div class="problem-bar">
   <p>
     The average Hims or Ro subscription runs <strong>$299–$399/month — indefinitely.</strong>
-    Most online platforms don't have a physician reviewing your case. They have a checkout cart. The difference matters — especially when your health history is part of the equation.
+    No doctor. No plan to stop. No exit strategy.
+    You deserve more than a refill button.
   </p>
 </div>
 
-<!-- SECTION HIDDEN: To restore "The Difference" and "How It Works" sections, remove the opening and closing comment tags below -->
-<!--
-COMPARISON SECTION:
+<!-- COMPARISON -->
 <section>
   <div class="section-label">The difference</div>
   <h2 class="section-title">A program that's designed<br>to end.</h2>
@@ -695,7 +692,7 @@ COMPARISON SECTION:
   </div>
 </section>
 
-HOW IT WORKS SECTION:
+<!-- HOW IT WORKS -->
 <section style="background: var(--warm-off); max-width: 100%; padding: 80px 0;">
   <div style="max-width: 1100px; margin: 0 auto; padding: 0 40px;">
     <div class="section-label">How it works</div>
@@ -726,7 +723,6 @@ HOW IT WORKS SECTION:
     </div>
   </div>
 </section>
--->
 
 <!-- CALCULATOR -->
 <section id="calculator" style="padding: 80px 40px;">
@@ -734,7 +730,7 @@ HOW IT WORKS SECTION:
     <div class="calc-inner">
       <div class="section-label">Pricing estimator</div>
       <h2 class="section-title">See what your program would cost.</h2>
-      <p class="section-body">Enter your current and goal weight to get a rough sense of what medication could cost for someone with your profile — so you can walk into your free consultation with real numbers in hand.</p>
+      <p class="section-body">Enter your current and goal weight to get a real estimate — including how long your program would likely last and what you'd pay compared to an open-ended subscription.</p>
     </div>
     <div class="calc-iframe-wrap">
       <!--
@@ -760,12 +756,12 @@ HOW IT WORKS SECTION:
     </div>
     <div class="doctor-content">
       <h2>Dr. Darius Roohani, MD</h2>
-      <p class="doctor-title">Founder &amp; Medical Director, YooshMD</p>
+      <p class="doctor-title">Founder &amp; Medical Director, YooshMD &nbsp;·&nbsp; Physician, Kaiser Permanente</p>
       <p class="doctor-bio">
         Dr. Roohani is double board-certified in Internal Medicine and Obesity Medicine, trained at Cedars-Sinai Medical Center. He founded YooshMD because he kept seeing the same problem: patients losing weight on GLP-1 medications, then regaining it all after stopping — because no one had given them a real plan.
       </p>
       <p class="doctor-bio">
-        YooshMD is built on the belief that the right treatment looks different for every patient. Some people need medication for a defined period. Others benefit from longer-term support. Dr. Roohani's job is to figure out which is true for you — and build a plan around that.
+        YooshMD is built on the belief that medication is a tool, not a life sentence. Every patient leaves with a taper plan, behavioral strategies, and the support to maintain their results after the last dose.
       </p>
       <div class="creds-grid">
         <div class="cred-item">
@@ -775,6 +771,10 @@ HOW IT WORKS SECTION:
         <div class="cred-item">
           <div class="label">Training</div>
           <div class="value">Cedars-Sinai Medical Center</div>
+        </div>
+        <div class="cred-item">
+          <div class="label">Practice Affiliation</div>
+          <div class="value">Kaiser Permanente</div>
         </div>
         <div class="cred-item">
           <div class="label">Licensed In</div>
@@ -802,7 +802,7 @@ HOW IT WORKS SECTION:
       </details>
       <details>
         <summary>How is this different from Hims, Ro, or Found?</summary>
-        <div class="faq-answer">Those platforms operate as indefinite subscription services — there's no plan for you to stop medication. YooshMD is a physician-led program where your care plan is actually built around your clinical profile, not a mindless subscription. We build your taper into the care plan from the start. You'll also see an actual board-certified obesity physician (Dr. Roohani), not a rotating NP or a chatbot.</div>
+        <div class="faq-answer">Those platforms operate as indefinite subscription services — there's no plan for you to stop medication. YooshMD is a finite, physician-led program. We build your taper into the care plan from the start. You'll also see an actual board-certified obesity physician (Dr. Roohani), not a rotating NP or a chatbot.</div>
       </details>
       <details>
         <summary>What happens when I reach my goal weight?</summary>
@@ -814,7 +814,7 @@ HOW IT WORKS SECTION:
       </details>
       <details>
         <summary>Do you offer any financial assistance?</summary>
-        <div class="faq-answer">We don't offer sliding-scale fees, but our pricing is significantly lower than most subscription platforms when you factor in total program length. Book a free discovery call and we'll walk you through the real numbers for your situation.</div>
+        <div class="faq-answer">We don't offer sliding-scale fees, but our pricing is significantly lower than most subscription platforms when you factor in total program length — because our program actually ends. Book a free discovery call and we'll walk you through the real numbers for your situation.</div>
       </details>
     </div>
   </div>
@@ -825,7 +825,7 @@ HOW IT WORKS SECTION:
   <div class="cta-block">
     <h2>Start with a free<br>15-minute call.</h2>
     <p>No cost. No obligation. Just a conversation with someone who can tell you if YooshMD is the right fit for where you're at.</p>
-    <a href="https://drchrono.com/scheduling/offices/dGhpcyBpcyAxNiBjaGFyc3GZdq07I8UbdCedknIZWQQ=" class="btn-white">Book My Free Discovery Call</a>
+    <a href="https://drchrono.com/scheduling/offices/dGhpcyBpcyAxNiBjaGFycysPOFfshC0Hi1g202sXmtQ=" class="btn-white">Book My Free Discovery Call</a>
     <p class="cta-fine">Available in California &amp; Nevada · Telehealth only · Self-pay</p>
   </div>
 </section>
