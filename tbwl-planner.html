@@ -226,6 +226,14 @@
       padding: 18px 16px;
     }
 
+    .stat-box.highlight-box {
+      background: var(--teal);
+    }
+
+    .stat-box.highlight-box .stat-label { color: rgba(255,255,255,0.75); }
+    .stat-box.highlight-box .stat-value { color: var(--white); }
+    .stat-box.highlight-box .stat-sub   { color: rgba(255,255,255,0.6); }
+
     .stat-label {
       font-size: 11px;
       font-weight: 600;
@@ -439,10 +447,10 @@
           <div class="stat-value" id="durationOut">—</div>
           <div class="stat-sub" id="durationSub"></div>
         </div>
-        <div class="stat-box">
-          <div class="stat-label">Monthly med cost</div>
+        <div class="stat-box highlight-box">
+          <div class="stat-label">Monthly program cost</div>
           <div class="stat-value" id="monthlyOut">—</div>
-          <div class="stat-sub">estimated range</div>
+          <div class="stat-sub" id="monthlySub">YooshMD rate</div>
         </div>
       </div>
 
@@ -468,7 +476,7 @@
       </div>
 
       <div class="disclaimer">
-        * Estimates are based on current manufacturer cash-pay pricing and are not guaranteed. Actual medication cost depends on the drug prescribed, dose titration, and any savings programs you may qualify for. Physician membership fees are separate. Individual results vary.
+        * Program duration is estimated based on your total body weight loss goal and typical GLP-1 titration timelines. Monthly rates reflect current YooshMD pricing and include physician oversight. Individual results vary; actual duration may differ based on clinical response and dose titration.
       </div>
     </div>
 
@@ -526,33 +534,35 @@
 
     const tbwl = ((cw - gw) / cw) * 100;
 
-    let months, monthlyLow, monthlyHigh, bandLabel;
+    // YooshMD tiered pricing: longer commitment = lower monthly rate
+    const PRICING = { 3: 199, 6: 169, 12: 149 };
 
-    if (tbwl < 5) {
-      months = 3; monthlyLow = 149; monthlyHigh = 299; bandLabel = 'Modest weight loss goal';
-    } else if (tbwl < 10) {
-      months = 3; monthlyLow = 149; monthlyHigh = 349; bandLabel = '5–10% body weight reduction';
+    let months, bandLabel;
+
+    if (tbwl < 10) {
+      months = 3; bandLabel = 'Less than 10% body weight reduction';
     } else if (tbwl < 15) {
-      months = 6; monthlyLow = 149; monthlyHigh = 399; bandLabel = '10–15% body weight reduction';
+      months = 6; bandLabel = '10–15% body weight reduction';
     } else {
-      months = 12; monthlyLow = 149; monthlyHigh = 449; bandLabel = '15%+ body weight reduction';
+      months = 12; bandLabel = '15%+ body weight reduction';
     }
 
-    const totalLow    = monthlyLow  * months;
-    const totalHigh   = monthlyHigh * months;
-    const indefMonthly = Math.round((monthlyLow + monthlyHigh) / 2);
+    const monthly    = PRICING[months];
+    const total      = monthly * months;
+    const indefMonthly = 350;            // representative open-ended cash-pay GLP-1 rate
     const indefTotal   = indefMonthly * 24;
 
     document.getElementById('durationOut').textContent = months + (months === 1 ? ' month' : ' months');
     document.getElementById('durationSub').textContent = bandLabel;
-    document.getElementById('monthlyOut').textContent = money(monthlyLow) + '–' + money(monthlyHigh);
-    document.getElementById('totalOut').textContent = money(totalLow) + '–' + money(totalHigh);
-    document.getElementById('totalSub').textContent = 'for the full ' + months + '-month program';
+    document.getElementById('monthlyOut').textContent = money(monthly) + '/mo';
+    document.getElementById('monthlySub').textContent = months + '-month program rate';
+    document.getElementById('totalOut').textContent = money(total);
+    document.getElementById('totalSub').textContent = 'for the full ' + months + '-month program (' + money(monthly) + '/mo × ' + months + ')';
 
     document.getElementById('compIndefOut').textContent = money(indefTotal) + '+ over 2 yrs';
-    document.getElementById('compYooshOut').textContent = money(totalLow) + '–' + money(totalHigh) + ' total';
+    document.getElementById('compYooshOut').textContent = money(total) + ' total';
     document.getElementById('compNote').textContent =
-      'On an open-ended subscription at ' + money(indefMonthly) + '/month, you could spend ' +
+      'On an open-ended subscription at ~' + money(indefMonthly) + '/month, you could spend ' +
       money(indefTotal) + ' over 2 years with no defined endpoint. ' +
       'A YooshMD program is finite — with a medically supervised taper built in from day one.';
 
