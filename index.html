@@ -79,6 +79,14 @@
       transition: background 0.2s;
     }
     .nav-cta:hover { background: var(--teal-mid); }
+    .nav-phone {
+      color: var(--text-dark);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      opacity: 0.7;
+    }
+    .nav-phone:hover { opacity: 1; }
 
     /* ─── HERO ─── */
     .hero-text { max-width: 700px; }
@@ -147,6 +155,18 @@
     }
     .hero-actions {
       display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+    }
+    .hero-phone {
+      width: 100%;
+      margin: 4px 0 0;
+      font-size: 0.875rem;
+      color: var(--text-muted, #666);
+    }
+    .hero-phone a {
+      color: inherit;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid currentColor;
     }
     .btn-primary {
       display: inline-block;
@@ -613,6 +633,7 @@
   <a class="nav-logo" href="https://yooshmd.com">YooshMD</a>
   <div class="nav-right">
     <a class="nav-lang" href="index-es.html">Español</a>
+    <a class="nav-phone" href="tel:9092938095">(909) 293-8095</a>
     <a class="nav-cta" href="https://drchrono.com/scheduling/offices/dGhpcyBpcyAxNiBjaGFyc3GZdq07I8UbdCedknIZWQQ=">Book Free Call</a>
   </div>
 </nav>
@@ -628,6 +649,7 @@
     <div class="hero-actions">
       <a href="https://drchrono.com/scheduling/offices/dGhpcyBpcyAxNiBjaGFyc3GZdq07I8UbdCedknIZWQQ=" class="btn-primary">Book a Free 15-Min Call</a>
       <a href="#calculator" class="btn-secondary">See what it costs →</a>
+      <p class="hero-phone">Or call <a href="tel:9092938095">(909) 293-8095</a></p>
     </div>
     <div class="hero-trust">
       <div class="trust-badge">
@@ -838,7 +860,7 @@
     <h2>Start with a free<br>15-minute call.</h2>
     <p>No cost. No obligation. Just a conversation with someone who can tell you if YooshMD is the right fit for where you're at.</p>
     <a href="https://drchrono.com/scheduling/offices/dGhpcyBpcyAxNiBjaGFyc3GZdq07I8UbdCedknIZWQQ=" class="btn-white">Book My Free Discovery Call</a>
-    <br><br>
+    <p style="margin-top:16px; font-size:15px; opacity:0.85;">Or call <a href="tel:9092938095" style="color:inherit; font-weight:600;">(909) 293-8095</a></p>
     <p class="cta-fine">Available in California &amp; Nevada · Telehealth only · Self-pay</p>
   </div>
 </section>
